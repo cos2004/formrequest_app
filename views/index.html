@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>测试</title>
+</head>
+<body>
+    <form class="J_form">
+        <p>
+            用户名：<input type="text" name="user">
+        </p>
+        <p>
+            描述：<input type="text" name="desc">
+        </p>
+        <!-- <p>
+            <input type="file" name="doc">
+        </p> -->
+        <p>
+            <input type="button" value="提交" class="J_submit">
+        </p>
+    </form>
+
+    <script>
+
+        document.querySelector('.J_submit').onclick = function() {
+            var data = new FormData(document.querySelector('.J_form'));
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/submit");
+            xhr.send(data);
+        };
+    </script>
+</body>
+</html>
