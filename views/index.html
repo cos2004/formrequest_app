@@ -10,23 +10,82 @@
             用户名：<input type="text" name="user">
         </p>
         <p>
-            描述：<input type="text" name="desc">
+            密码：<input type="text" name="psw">
         </p>
-        <!-- <p>
-            <input type="file" name="doc">
-        </p> -->
         <p>
-            <input type="button" value="提交" class="J_submit">
+            <input type="file" name="onefile" class="J_file">
         </p>
+        <p>
+            <input type="button" value="提交" class="J_submit" disabled>
+        </p>
+         <p>请选择文件后再提交</p>
     </form>
 
     <script>
+        var picBuffer = null; // 图片数据
+        document.querySelector('.J_file').onchange = function(evt) {
+            var fileReader = new FileReader();
+            var file = evt.target.files[0];
+            document.querySelector('.J_submit').removeAttribute('disabled');
+            fileReader.onload = function(e) {
+               picBuffer = e.target.result;
+               console.log('read onload: ', e.target.result.byteLength);
+            }
+            fileReader.readAsArrayBuffer(file);
+        };
 
         document.querySelector('.J_submit').onclick = function() {
-            var data = new FormData(document.querySelector('.J_form'));
+            var boundary_key = 'aotu_lab';
+            var boundary = '--' + boundary_key;
+            var end_boundary = '\r\n' + boundary + '--';
+            // var data = new FormData(document.querySelector('.J_form'));
+            var retsult = '';
+              retsult += boundary;
+              retsult += '\r\n';
+              retsult += 'Content-Disposition: form-data; name="user"';
+              retsult += '\r\n';
+              retsult += '\r\n';
+              retsult += document.querySelector('input[name=user]').value;
+              retsult += '\r\n'; 
+              // retsult += '\r\n'; 
+
+              retsult += boundary;
+              retsult += '\r\n';
+              retsult += 'Content-Disposition: form-data; name="psw"';
+              retsult += '\r\n';
+              retsult += '\r\n';
+              retsult += document.querySelector('input[name=psw]').value;
+              retsult += '\r\n';
+              
+              retsult += boundary;
+              retsult += '\r\n';
+              retsult += 'Content-Disposition: form-data; name="onefile"; filename="pic.png"';
+              retsult += '\r\n';
+              retsult += 'Content-Type: image/png';
+              retsult += '\r\n';
+              retsult += '\r\n';
+
+            var buf = new ArrayBuffer(retsult.length + picBuffer.byteLength + end_boundary.length);
+            var dv = new DataView(buf);
+            for (var i = 0; i < retsult.length; i++) {
+               dv.setUint8(i, retsult.charCodeAt(i));
+            }
+
+            var pic_dv = new DataView(picBuffer);
+            for (var i = 0; i < picBuffer.byteLength; i++) {
+              dv.setUint8(retsult.length + i, pic_dv.getUint8(i));
+            }
+
+            for (var i = 0; i < end_boundary.length; i++) {
+               dv.setUint8(retsult.length + picBuffer.byteLength + i, end_boundary.charCodeAt(i));
+            }
+
             var xhr = new XMLHttpRequest();
             xhr.open("POST", "/submit");
-            xhr.send(data);
+            // xhr.send(data);
+            xhr.setRequestHeader('Content-Type', 'multipart/form-data; boundary='+boundary_key);
+            xhr.send(dv.buffer);
+            // xhr.send(req_body);
         };
     </script>
 </body>
