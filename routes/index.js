@@ -16,7 +16,6 @@ var storage = multer.diskStorage({
 })
 var upload = multer({ storage: storage});
 
-/* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
@@ -43,9 +42,8 @@ router.get('/formdata', function(req, res, next) {
   retsult += 'Content-Disposition: form-data; name="user"';
   retsult += '\r\n';
   retsult += '\r\n';
-  retsult += 'aotu_lab';
-  retsult += '\r\n'; 
-  // retsult += '\r\n'; 
+  retsult += 'aotu.io';
+  retsult += '\r\n';
 
   retsult += boundary;
   retsult += '\r\n';
@@ -62,8 +60,8 @@ router.get('/formdata', function(req, res, next) {
   retsult += 'Content-Type: image/png';
   retsult += '\r\n';
   retsult += '\r\n';
-  request.write(retsult);
-  console.log(fs.readFileSync('./public/images/o2logo.png'));
+  request.write(retsult); // 写入文本数据
+
   var picStream = fs.createReadStream('./public/images/o2logo.png');
   picStream.on('end', function() {
               console.log('end---------: ');
@@ -73,11 +71,8 @@ router.get('/formdata', function(req, res, next) {
               console.log(request);
               res.end('post form data success!');
            })
-           .pipe(request, {end: false});
+           .pipe(request, {end: false}); // 写入图片数据
   
-  console.log('====');
-  // request.setHeader('Content-Length', Buffer.byteLength(retsult));
-
   request.on('error', function(e) {
     console.log('request err: ',e);
   });
@@ -91,8 +86,6 @@ router.get('/formdata', function(req, res, next) {
 //   });
 // });
 router.post('/submit', upload.single('onefile'), function(req, res, next) {
-  console.log(req.file);
-  console.log(req.params,req.body, path.normalize(req.file.path));
   res.json({
     code: 1,
     url: '/'+req.file.path.replace(/\\/g, '/')

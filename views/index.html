@@ -2,23 +2,24 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>测试</title>
+    <title>formdata测试页面</title>
 </head>
 <body>
     <form class="J_form">
         <p>
-            用户名：<input type="text" name="user">
+            用户名：<input type="text" name="user" value="aotu.io" readonly>
         </p>
         <p>
-            密码：<input type="text" name="psw">
+            密码：<input type="text" name="psw" value="123456" readonly>
         </p>
         <p>
-            <input type="file" name="onefile" class="J_file">
+            <label for="onefile">png图片：</label><input type="file" name="onefile" id="onefile" class="J_file">
         </p>
         <p>
-            <input type="button" value="提交" class="J_submit" disabled>
+            <input type="button" value="提交" class="J_submit" title="请选择文件后再提交" style="font-size:14px;" disabled><span style="font-size:12px;color:#999;">(请选择文件后再提交)</span>
         </p>
-         <p>请选择文件后再提交</p>
+        <p>返回结果：<span class="J_ret"></span></p>
+         
     </form>
 
     <script>
@@ -28,17 +29,18 @@
             var file = evt.target.files[0];
             document.querySelector('.J_submit').removeAttribute('disabled');
             fileReader.onload = function(e) {
-               picBuffer = e.target.result;
+               picBuffer = e.target.result; // 文件的ArrayBuffer数据
                console.log('read onload: ', e.target.result.byteLength);
             }
             fileReader.readAsArrayBuffer(file);
         };
 
         document.querySelector('.J_submit').onclick = function() {
-            var boundary_key = 'aotu_lab';
+            var boundary_key = 'aotu_lab'; // 数据分割符，一般是随机的字符串
             var boundary = '--' + boundary_key;
             var end_boundary = '\r\n' + boundary + '--';
             // var data = new FormData(document.querySelector('.J_form'));
+            // 以下是拼接文本域的的数据。为了方便演示以下数据都是单字节、并没有考虑兼容中文
             var retsult = '';
               retsult += boundary;
               retsult += '\r\n';
@@ -47,8 +49,8 @@
               retsult += '\r\n';
               retsult += document.querySelector('input[name=user]').value;
               retsult += '\r\n'; 
-              // retsult += '\r\n'; 
 
+            // 另外一个拼接文本域的的数据
               retsult += boundary;
               retsult += '\r\n';
               retsult += 'Content-Disposition: form-data; name="psw"';
@@ -56,7 +58,8 @@
               retsult += '\r\n';
               retsult += document.querySelector('input[name=psw]').value;
               retsult += '\r\n';
-              
+
+              // 拼接二进制数据，这里为了方便演示只用了png的数据
               retsult += boundary;
               retsult += '\r\n';
               retsult += 'Content-Disposition: form-data; name="onefile"; filename="pic.png"';
@@ -65,26 +68,29 @@
               retsult += '\r\n';
               retsult += '\r\n';
 
-            var buf = new ArrayBuffer(retsult.length + picBuffer.byteLength + end_boundary.length);
+            var buf = new ArrayBuffer(retsult.length + picBuffer.byteLength + end_boundary.length);// byte长度为文本+图片的大小
             var dv = new DataView(buf);
-            for (var i = 0; i < retsult.length; i++) {
+            for (var i = 0; i < retsult.length; i++) { // 把文本的charCode（10进制码）写入相应的字节
                dv.setUint8(i, retsult.charCodeAt(i));
             }
 
             var pic_dv = new DataView(picBuffer);
-            for (var i = 0; i < picBuffer.byteLength; i++) {
+            for (var i = 0; i < picBuffer.byteLength; i++) { // 再写入图片的数据，图片数据由无符号整数构成
               dv.setUint8(retsult.length + i, pic_dv.getUint8(i));
             }
 
-            for (var i = 0; i < end_boundary.length; i++) {
+            for (var i = 0; i < end_boundary.length; i++) { // 最后写入结束符
                dv.setUint8(retsult.length + picBuffer.byteLength + i, end_boundary.charCodeAt(i));
             }
 
             var xhr = new XMLHttpRequest();
+            xhr.onload = function() {
+              document.querySelector('.J_ret').innerText = xhr.responseText;
+            };
             xhr.open("POST", "/submit");
             // xhr.send(data);
-            xhr.setRequestHeader('Content-Type', 'multipart/form-data; boundary='+boundary_key);
-            xhr.send(dv.buffer);
+            xhr.setRequestHeader('Content-Type', 'multipart/form-data; boundary='+boundary_key); // 记得在头部带上boundary
+            xhr.send(dv.buffer); // 发送buffer数据，这是xhr2的一个特性
             // xhr.send(req_body);
         };
     </script>
