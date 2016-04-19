@@ -44,18 +44,31 @@
               retsult += 'Content-Disposition: form-data; name="onefile"; filename="pic.png"' + '\r\n';
               retsult += 'Content-Type: image/png' + '\r\n\r\n';
               
-            var buf = new ArrayBuffer(retsult.length + picBuffer.byteLength + end_boundary.length);// byte长度为文本+图片的大小
-            var dv = new DataView(buf);
+            // var buf = new ArrayBuffer(retsult.length + picBuffer.byteLength + end_boundary.length);// byte长度为文本+图片的大小
+            // var dv = new DataView(buf);
+            // for (var i = 0; i < retsult.length; i++) { // 把文本的charCode（10进制码）写入相应的字节
+            //    dv.setUint8(i, retsult.charCodeAt(i));
+            // }
+            // var pic_dv = new DataView(picBuffer);
+            // for (var i = 0; i < picBuffer.byteLength; i++) { // 再写入图片的数据，图片数据由无符号整数构成
+            //   dv.setUint8(retsult.length + i, pic_dv.getUint8(i));
+            // }
+            // for (var i = 0; i < end_boundary.length; i++) { // 最后写入结束符
+            //    dv.setUint8(retsult.length + picBuffer.byteLength + i, end_boundary.charCodeAt(i));
+            // }
+            var result_array = [];
             for (var i = 0; i < retsult.length; i++) { // 把文本的charCode（10进制码）写入相应的字节
-               dv.setUint8(i, retsult.charCodeAt(i));
+               result_array.push(retsult.charCodeAt(i));
             }
-            var pic_dv = new DataView(picBuffer);
-            for (var i = 0; i < picBuffer.byteLength; i++) { // 再写入图片的数据，图片数据由无符号整数构成
-              dv.setUint8(retsult.length + i, pic_dv.getUint8(i));
-            }
+            
+            var pic_typedArray = new Uint8Array(picBuffer);
+            
+            var endBoundaryArray = [];
             for (var i = 0; i < end_boundary.length; i++) { // 最后写入结束符
                dv.setUint8(retsult.length + picBuffer.byteLength + i, end_boundary.charCodeAt(i));
             }
+            
+            
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4 && xhr.status === 200) {
