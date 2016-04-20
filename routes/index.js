@@ -64,7 +64,11 @@ router.get('/formdata', function(req, res, next) {
 router.post('/submit', upload.single('onefile'), function(req, res, next) {
     res.json({
         code: 1,
-        url: '/'+req.file.path.replace(/\\/g, '/')
+        data: {
+            user: req.body.user,
+            psw: req.body.psw,
+            url: '/'+req.file.path.replace(/\\/g, '/')
+        }
     });
 });
 

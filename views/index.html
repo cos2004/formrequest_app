@@ -43,42 +43,28 @@
               retsult += boundary + '\r\n';
               retsult += 'Content-Disposition: form-data; name="onefile"; filename="pic.png"' + '\r\n';
               retsult += 'Content-Type: image/png' + '\r\n\r\n';
-              
-            // var buf = new ArrayBuffer(retsult.length + picBuffer.byteLength + end_boundary.length);// byte长度为文本+图片的大小
-            // var dv = new DataView(buf);
-            // for (var i = 0; i < retsult.length; i++) { // 把文本的charCode（10进制码）写入相应的字节
-            //    dv.setUint8(i, retsult.charCodeAt(i));
-            // }
-            // var pic_dv = new DataView(picBuffer);
-            // for (var i = 0; i < picBuffer.byteLength; i++) { // 再写入图片的数据，图片数据由无符号整数构成
-            //   dv.setUint8(retsult.length + i, pic_dv.getUint8(i));
-            // }
-            // for (var i = 0; i < end_boundary.length; i++) { // 最后写入结束符
-            //    dv.setUint8(retsult.length + picBuffer.byteLength + i, end_boundary.charCodeAt(i));
-            // }
-            var result_array = [];
+             
+            var resultArray = [];
             for (var i = 0; i < retsult.length; i++) { // 把文本的charCode（10进制码）写入相应的字节
-               result_array.push(retsult.charCodeAt(i));
+               resultArray.push(retsult.charCodeAt(i));
             }
-            
-            var pic_typedArray = new Uint8Array(picBuffer);
-            
+            var pic_typedArray = new Uint8Array(picBuffer); // 把buffer转为typed array数据、再转为普通数组然后可以使用数组的方法
             var endBoundaryArray = [];
             for (var i = 0; i < end_boundary.length; i++) { // 最后写入结束符
-               dv.setUint8(retsult.length + picBuffer.byteLength + i, end_boundary.charCodeAt(i));
+               endBoundaryArray.push(end_boundary.charCodeAt(i));
             }
-            
+            var postArray = resultArray.concat(Array.prototype.slice.call(pic_typedArray), endBoundaryArray); // 合并文本、图片数据
             
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4 && xhr.status === 200) {
                     document.querySelector('.J_ret').innerText = xhr.responseText;
-                    document.querySelector('.J_img').src = JSON.parse(xhr.responseText).url;
+                    document.querySelector('.J_img').src = JSON.parse(xhr.responseText).data.url;
                 }
             };
             xhr.open("POST", "/submit");
             xhr.setRequestHeader('Content-Type', 'multipart/form-data; boundary='+boundary_key); // 记得在头部带上boundary
-            xhr.send(dv.buffer); // 发送buffer数据，这是xhr2的一个特性
+            xhr.send(new Uint8Array(postArray).buffer); // 把普通array转回typed array获得buffer数据 。发送buffer数据，这是xhr2的一个特性
         };
     </script>
 </body>
